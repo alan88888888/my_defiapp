@@ -21,7 +21,7 @@ A decentralized finance (DeFi) application that allows users to provide liquidit
 ## Project Structure
 
 ```
-my_docker_image/
+my_defiapp/
 ├── contracts/              # Smart contracts
 │   ├── NewToken.sol       # ERC20 token implementation
 │   └── Pool.sol           # Liquidity pool implementation
