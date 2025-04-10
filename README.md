@@ -62,6 +62,7 @@ my_defiapp/
   - Reward calculation
   - Time-locked staking
   - Reward rate calculation based on lock period:
+    - less than 14 days: 0%
     - 14 days: 5%
     - 31 days: 12%
     - 3 months: 40%

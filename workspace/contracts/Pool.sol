@@ -11,7 +11,7 @@ function calculateRewardRate(uint256 timePeriod) public pure returns (uint256) {
     } else if (timePeriod == 365 days) {
         return 180; // 180% for 1 year
     }
-    return 3; // Default 3% for less than 14 days
+    return 0; // Default 3% for less than 14 days
 }
 
 // Add function to calculate rewards based on time period
