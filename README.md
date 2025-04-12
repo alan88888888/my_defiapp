@@ -106,13 +106,6 @@ cd workspace/frontend
 npm install
 ```
 
-3. Configure environment variables:
-```bash
-# Copy the example environment file
-cp .env.example .env
-# Edit .env with your configuration
-```
-
 ### Local Development Setup
 1. Start a local blockchain:
 ```bash
