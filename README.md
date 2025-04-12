@@ -18,6 +18,176 @@ A decentralized finance (DeFi) application that allows users to provide liquidit
 - Hardhat (for local development)
 - Docker (optional, for containerized deployment)
 
+## Dependencies
+
+### Backend Dependencies
+```json
+{
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.0",
+    "hardhat": "^2.12.0",
+    "ethers": "^5.7.2",
+    "web3": "^1.8.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^3.4.4",
+    "hardhat-gas-reporter": "^1.0.8"
+  }
+}
+```
+
+### Frontend Dependencies
+```json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web3": "^1.8.0",
+    "ethers": "^5.7.2",
+    "bootstrap": "^5.2.3",
+    "react-bootstrap": "^2.7.0",
+    "chart.js": "^4.2.0",
+    "react-chartjs-2": "^5.2.0"
+  }
+}
+```
+
+## Configuration
+
+### Environment Variables
+Create a `.env` file in the root directory with the following variables:
+```env
+# Network Configuration
+NETWORK_URL=http://localhost:8545
+CHAIN_ID=31337
+
+# Contract Addresses (will be populated after deployment)
+ALPHA_TOKEN_ADDRESS=
+BETA_TOKEN_ADDRESS=
+POOL_ADDRESS=
+
+# API Keys (if needed)
+INFURA_API_KEY=
+ETHERSCAN_API_KEY=
+```
+
+### Hardhat Configuration
+The `hardhat.config.js` file includes:
+- Network configurations (localhost, testnet, mainnet)
+- Solidity compiler settings
+- Gas reporter configuration
+- Etherscan verification settings
+
+### Frontend Configuration
+The frontend configuration in `workspace/frontend/src/utils/contract.js` includes:
+- Contract ABIs
+- Contract addresses
+- Network configurations
+- Web3 provider settings
+
+## Setup Guides
+
+### Initial Setup
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd my_defiapp
+```
+
+2. Install dependencies:
+```bash
+# Install backend dependencies
+npm install
+
+# Install frontend dependencies
+cd workspace/frontend
+npm install
+```
+
+3. Configure environment variables:
+```bash
+# Copy the example environment file
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### Local Development Setup
+1. Start a local blockchain:
+```bash
+npx hardhat node
+```
+
+2. Deploy contracts to local network:
+```bash
+npx hardhat run scripts/deploy.js --network localhost
+npx hardhat run scripts/distributed_t.js --network localhost
+```
+
+3. Start the frontend development server:
+```bash
+cd workspace/frontend
+npm start
+```
+
+### Testnet/Mainnet Setup
+1. Configure MetaMask:
+   - Add the appropriate network (testnet/mainnet)
+   - Import your account
+   - Ensure you have sufficient test/main ETH
+
+2. Deploy contracts:
+```bash
+# For testnet
+npx hardhat run scripts/deploy.js --network <testnet-name>
+
+# For mainnet
+npx hardhat run scripts/deploy.js --network mainnet
+```
+
+3. Update contract addresses:
+   - Update the contract addresses in `.env`
+   - Update the frontend configuration
+
+### Docker Setup
+1. Build the Docker image:
+```bash
+docker build -t defiapp .
+```
+
+2. Run the container:
+```bash
+docker run -p 3000:3000 defiapp
+```
+
+## Troubleshooting
+
+### Common Issues
+1. **Contract Deployment Fails**
+   - Check network connection
+   - Verify account balance
+   - Ensure correct network configuration
+
+2. **Frontend Connection Issues**
+   - Verify MetaMask is connected
+   - Check network configuration
+   - Ensure contract addresses are correct
+
+3. **Transaction Failures**
+   - Check gas settings
+   - Verify token approvals
+   - Ensure sufficient balance
+
+### Support
+For additional support:
+- Check the [documentation](link-to-docs)
+- Open an issue on GitHub
+- Contact the development team
+
 ## Project Structure
 
 ```
