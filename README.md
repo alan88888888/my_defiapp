@@ -71,21 +71,81 @@ my_defiapp/
 
 ## Frontend Features
 
-### Token Swapping
-- Real-time price calculation
-- Slippage protection
-- Token balance display
+The frontend is built with React and provides a modern, user-friendly interface with the following features:
 
-### Liquidity Management
-- Add liquidity with automatic token ratio calculation
-- Remove liquidity with proportional token return
-- LP token balance tracking
+1. **Wallet Integration**
+   - Connect your MetaMask wallet
+   - View your token balances
+   - Display your connected wallet address
 
-### Reward System
-- Dynamic reward rates based on lock period
-- Account-specific lock status
-- Real-time countdown timer
-- Locked state UI feedback
+2. **Token Swap**
+   - Swap between Alpha and Beta tokens
+   - Real-time price calculation
+   - Input validation and error handling
+   - Token selection with automatic balance updates
+
+3. **Liquidity Management**
+   - Add liquidity to the pool
+   - Remove liquidity from the pool
+   - View current pool statistics
+   - Automatic calculation of required token amounts
+
+4. **Reward System**
+   - Time-locked staking with multiple lock periods:
+     - 14 days (5% reward)
+     - 31 days (12% reward)
+     - 3 months (40% reward)
+     - 6 months (85% reward)
+     - 1 year (180% reward)
+   - View your current rewards
+   - Track lock period countdown
+   - Claim rewards after lock period ends
+
+5. **Data Visualization**
+   - **Pool Statistics**
+     - Bar chart showing Alpha and Beta token balances
+     - Real-time updates of pool composition
+   
+   - **Reward Rates**
+     - Line chart displaying reward rates for different lock periods
+     - Visual comparison of reward percentages
+   
+   - **User Position**
+     - Pie chart showing distribution of LP tokens, Alpha, and Beta holdings
+     - Interactive display of your portfolio composition
+
+   - **Transaction Analysis**
+     - Bar chart tracking transaction volume (Swaps, Add/Remove Liquidity)
+     - Historical data visualization
+   
+   - **Liquidity Trends**
+     - Line chart showing liquidity changes over time
+     - Comparison of Alpha and Beta token trends
+   
+   - **Reward Prediction**
+     - Line chart forecasting potential rewards
+     - Projections for different lock periods
+   
+   - **User Behavior Analysis**
+     - Doughnut chart showing operation distribution
+     - Breakdown of swap, liquidity, and lock activities
+
+6. **Transaction History**
+   - Detailed record of all operations
+   - Filter by transaction type
+   - Timestamp and amount information
+   - Additional reward information for lock operations
+
+7. **Responsive Design**
+   - Mobile-friendly interface
+   - Adaptive layout for different screen sizes
+   - Consistent styling across devices
+
+8. **User Interface**
+   - Dark theme with neon blue accents
+   - Intuitive navigation
+   - Clear error messages and notifications
+   - Loading states and progress indicators
 
 ## Development
 
