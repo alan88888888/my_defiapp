@@ -3,12 +3,38 @@ import './App.css';
 
 /* User Interface */
 import Logo from "./assets/icons/currency-exchange.svg"
-import {Card, Tabs, Tab, Row, Col, Form, Button} from 'react-bootstrap';
+import {Card, Tabs, Tab, Row, Col, Form, Button, Table} from 'react-bootstrap';
 
 /* Interaction with Backend */
 import { React, useState, useEffect } from 'react';
 import { ethers } from 'ethers';  // Import ethers.js library
 import { getAmountOut,getContracts, getPoolInfo, getTokenBalances, getRequiredAmount1, swapTokens, addLiquidity, getRewardsInfo, removeLiquidity } from './utils/contract';      // Import helper functions
+import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function App() {
 
@@ -162,62 +188,107 @@ function App() {
       }
   };
 
+  // Add new state for transaction history
+  const [transactionHistory, setTransactionHistory] = useState([]);
+
+  // Modify handleLock function to include reward history
+  const handleLock = async () => {
+    if (account && !lockStates.has(account)) {
+      const currentPeriod = getCurrentTimePeriod();
+      const lockDuration = currentPeriod * 24 * 60 * 60 * 1000;
+      const endTime = new Date().getTime() + lockDuration;
+      const newLockStates = new Map(lockStates);
+      newLockStates.set(account, { isLocked: true, endTime });
+      setLockStates(newLockStates);
+
+      // Calculate and add reward to history
+      const rewardsInfo = await getRewardsInfo(contracts, account);
+      const rewardRate = rewardsInfo.rewardRate;
+      const userShare = rewardsInfo.userShare;
+      const totalRewards = rewardsInfo.totalRewards;
+      
+      // Add reward to transaction history
+      addTransactionToHistory('Reward', totalRewards, 'LP Tokens', `Rate: ${rewardRate}%`);
+    }
+  };
+
+  // Modify addTransactionToHistory function to include additional info
+  const addTransactionToHistory = (type, amount, token, additionalInfo = '') => {
+    const newTransaction = {
+      type,
+      amount,
+      token,
+      additionalInfo,
+      timestamp: new Date().toLocaleString(),
+      id: Date.now()
+    };
+    setTransactionHistory(prev => [newTransaction, ...prev]);
+  };
+
   const handleSwap = async () => {
     try {
-        if (!contracts) return;
+      if (!contracts) return;
 
-        const tokenIn = fromToken === 'ALPHA' ? 'token0' : 'token1';
-        const tokenOut = toToken === 'ALPHA' ? 'token0' : 'token1';
+      const tokenIn = fromToken === 'ALPHA' ? 'token0' : 'token1';
+      const tokenOut = toToken === 'ALPHA' ? 'token0' : 'token1';
 
-        await swapTokens(contracts, tokenIn, fromAmount, tokenOut);
+      await swapTokens(contracts, tokenIn, fromAmount, tokenOut);
 
-        // update balance
-        const balances = await getTokenBalances(contracts, account);
-        setBalance0(balances.token0);
-        setBalance1(balances.token1);
+      // Add to transaction history
+      addTransactionToHistory('Swap', fromAmount, fromToken);
+      addTransactionToHistory('Swap', toAmount, toToken);
 
-        // update pool info
-        const newPoolInfo = await getPoolInfo(contracts);
-        setPoolInfo(newPoolInfo);
+      // update balance
+      const balances = await getTokenBalances(contracts, account);
+      setBalance0(balances.token0);
+      setBalance1(balances.token1);
 
-        alert('Swap completed successfully!');
+      // update pool info
+      const newPoolInfo = await getPoolInfo(contracts);
+      setPoolInfo(newPoolInfo);
+
+      alert('Swap completed successfully!');
     } catch (error) {
-        console.error(error);
-        alert('Failed to swap tokens');
+      console.error(error);
+      alert('Failed to swap tokens');
     }
   };
 
   const handleAddLiquidity = async () => {
     try {
-        if (!contracts || !account) {
-            throw new Error("Contracts or account not initialized");
-        }
+      if (!contracts || !account) {
+        throw new Error("Contracts or account not initialized");
+      }
 
-        await addLiquidity(contracts, token0Amount);
+      await addLiquidity(contracts, token0Amount);
 
-        // update balance
-        const balances = await getTokenBalances(contracts, account);
-        setBalance0(balances.token0);
-        setBalance1(balances.token1);
+      // Add to transaction history
+      addTransactionToHistory('Add Liquidity', token0Amount, 'ALPHA');
+      addTransactionToHistory('Add Liquidity', token1Amount, 'BETA');
 
-        // update pool info
-        const newPoolInfo = await getPoolInfo(contracts);
-        setPoolInfo(newPoolInfo);
+      // update balance
+      const balances = await getTokenBalances(contracts, account);
+      setBalance0(balances.token0);
+      setBalance1(balances.token1);
 
-        // update rewards info
-        const rewardsInfo = await getRewardsInfo(contracts, account);
-        setTotalRewards(rewardsInfo.totalRewards);
-        setUserShare(rewardsInfo.userShare);
-        setUserLPBalance(rewardsInfo.userLPBalance);
+      // update pool info
+      const newPoolInfo = await getPoolInfo(contracts);
+      setPoolInfo(newPoolInfo);
 
-        // Clear input fields
-        setToken0Amount('');
-        setToken1Amount('');
+      // update rewards info
+      const rewardsInfo = await getRewardsInfo(contracts, account);
+      setTotalRewards(rewardsInfo.totalRewards);
+      setUserShare(rewardsInfo.userShare);
+      setUserLPBalance(rewardsInfo.userLPBalance);
 
-        alert("Liquidity added successfully!");
+      // Clear input fields
+      setToken0Amount('');
+      setToken1Amount('');
+
+      alert("Liquidity added successfully!");
     } catch (error) {
-        console.error("Detailed error:", error);
-        alert(`Failed to add liquidity: ${error.message}`);
+      console.error("Detailed error:", error);
+      alert(`Failed to add liquidity: ${error.message}`);
     }
   };
 
@@ -228,6 +299,9 @@ function App() {
       }
 
       await removeLiquidity(contracts, lpAmountToRemove);
+
+      // Add to transaction history
+      addTransactionToHistory('Remove Liquidity', lpAmountToRemove, 'LP Tokens');
 
       // update balance
       const balances = await getTokenBalances(contracts, account);
@@ -282,18 +356,6 @@ function App() {
     }
   };
 
-  // Modify handleLock function
-  const handleLock = () => {
-    if (account && !lockStates.has(account)) {
-      const currentPeriod = getCurrentTimePeriod();
-      const lockDuration = currentPeriod * 24 * 60 * 60 * 1000;
-      const endTime = new Date().getTime() + lockDuration;
-      const newLockStates = new Map(lockStates);
-      newLockStates.set(account, { isLocked: true, endTime });
-      setLockStates(newLockStates);
-    }
-  };
-
   // Add useEffect for countdown timer
   useEffect(() => {
     let timer;
@@ -331,6 +393,163 @@ function App() {
   const isCurrentAccountLocked = () => {
     return account && lockStates.has(account) && lockStates.get(account).isLocked;
   };
+
+  // Add new state variables for charts
+  const [poolChartData, setPoolChartData] = useState({
+    labels: ['Alpha', 'Beta'],
+    datasets: [{
+      label: 'Pool Balance',
+      data: [0, 0],
+      backgroundColor: ['#00FFFF', '#00BFFF'],
+      borderColor: ['#00FFFF', '#00BFFF'],
+      borderWidth: 1
+    }]
+  });
+
+  const [rewardChartData, setRewardChartData] = useState({
+    labels: ['14 Days', '31 Days', '3 Months', '6 Months', '1 Year'],
+    datasets: [{
+      label: 'Reward Rate (%)',
+      data: [5, 12, 40, 85, 180],
+      backgroundColor: 'rgba(0, 255, 255, 0.5)',
+      borderColor: '#00FFFF',
+      borderWidth: 1
+    }]
+  });
+
+  const [userPositionData, setUserPositionData] = useState({
+    labels: ['LP Tokens', 'Alpha', 'Beta'],
+    datasets: [{
+      data: [0, 0, 0],
+      backgroundColor: ['#00FFFF', '#00BFFF', '#0080FF']
+    }]
+  });
+
+  // Add useEffect to update chart data when pool info changes
+  useEffect(() => {
+    if (poolInfo) {
+      setPoolChartData({
+        ...poolChartData,
+        datasets: [{
+          ...poolChartData.datasets[0],
+          data: [poolInfo.token0Balance, poolInfo.token1Balance]
+        }]
+      });
+    }
+  }, [poolInfo]);
+
+  // Add useEffect to update user position data
+  useEffect(() => {
+    if (userLPBalance && balance0 && balance1) {
+      setUserPositionData({
+        ...userPositionData,
+        datasets: [{
+          ...userPositionData.datasets[0],
+          data: [userLPBalance, balance0, balance1]
+        }]
+      });
+    }
+  }, [userLPBalance, balance0, balance1]);
+
+  // Add new state variables for analysis charts
+  const [volumeChartData, setVolumeChartData] = useState({
+    labels: ['Swap', 'Add Liquidity', 'Remove Liquidity'],
+    datasets: [{
+      label: 'Transaction Volume',
+      data: [0, 0, 0],
+      backgroundColor: ['#00FFFF', '#00BFFF', '#0080FF'],
+      borderColor: ['#00FFFF', '#00BFFF', '#0080FF'],
+      borderWidth: 1
+    }]
+  });
+
+  const [liquidityTrendData, setLiquidityTrendData] = useState({
+    labels: ['Initial', 'Current'],
+    datasets: [{
+      label: 'Alpha',
+      data: [0, 0],
+      borderColor: '#00FFFF',
+      tension: 0.1
+    }, {
+      label: 'Beta',
+      data: [0, 0],
+      borderColor: '#00BFFF',
+      tension: 0.1
+    }]
+  });
+
+  const [rewardPredictionData, setRewardPredictionData] = useState({
+    labels: ['14 Days', '31 Days', '3 Months', '6 Months', '1 Year'],
+    datasets: [{
+      label: 'Predicted Rewards',
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: 'rgba(0, 255, 255, 0.2)',
+      borderColor: '#00FFFF',
+      borderWidth: 1
+    }]
+  });
+
+  const [userBehaviorData, setUserBehaviorData] = useState({
+    labels: ['Swaps', 'Liquidity Add', 'Liquidity Remove', 'Locks'],
+    datasets: [{
+      data: [0, 0, 0, 0],
+      backgroundColor: ['#00FFFF', '#00BFFF', '#0080FF', '#0066CC']
+    }]
+  });
+
+  // Add useEffect to update analysis data
+  useEffect(() => {
+    // Update volume chart data based on transaction history
+    const swapCount = transactionHistory.filter(t => t.type === 'Swap').length;
+    const addLiquidityCount = transactionHistory.filter(t => t.type === 'Add Liquidity').length;
+    const removeLiquidityCount = transactionHistory.filter(t => t.type === 'Remove Liquidity').length;
+
+    setVolumeChartData({
+      ...volumeChartData,
+      datasets: [{
+        ...volumeChartData.datasets[0],
+        data: [swapCount, addLiquidityCount, removeLiquidityCount]
+      }]
+    });
+
+    // Update liquidity trend data
+    if (poolInfo) {
+      setLiquidityTrendData({
+        ...liquidityTrendData,
+        datasets: [{
+          ...liquidityTrendData.datasets[0],
+          data: [0, parseFloat(poolInfo.token0Balance)]
+        }, {
+          ...liquidityTrendData.datasets[1],
+          data: [0, parseFloat(poolInfo.token1Balance)]
+        }]
+      });
+    }
+
+    // Update reward prediction data
+    if (userLPBalance) {
+      const predictions = [5, 12, 40, 85, 180].map(rate => 
+        (parseFloat(userLPBalance) * rate) / 100
+      );
+      setRewardPredictionData({
+        ...rewardPredictionData,
+        datasets: [{
+          ...rewardPredictionData.datasets[0],
+          data: predictions
+        }]
+      });
+    }
+
+    // Update user behavior data
+    const lockCount = transactionHistory.filter(t => t.type === 'Reward').length;
+    setUserBehaviorData({
+      ...userBehaviorData,
+      datasets: [{
+        ...userBehaviorData.datasets[0],
+        data: [swapCount, addLiquidityCount, removeLiquidityCount, lockCount]
+      }]
+    });
+  }, [transactionHistory, poolInfo, userLPBalance]);
   
   return (
     <div className="App" style={{ 
@@ -942,16 +1161,16 @@ function App() {
             defaultActiveKey="swap"
             className="mb-3"
             justify
-              style={{
-                '--bs-nav-tabs-link-active-color': '#00FFFF',
-                '--bs-nav-tabs-link-active-bg': 'rgba(0, 255, 255, 0.05)',
-                '--bs-nav-tabs-link-active-border-color': '#00FFFF',
-                '--bs-nav-tabs-link-hover-border-color': '#00FFFF',
-                '--bs-nav-tabs-link-color': '#E0E0E0',
-                padding: '0 2rem',
-                borderBottom: '1px solid rgba(0, 255, 255, 0.1)',
-                marginTop: '1rem'
-              }}
+            style={{
+              '--bs-nav-tabs-link-active-color': '#00FFFF',
+              '--bs-nav-tabs-link-active-bg': 'rgba(0, 255, 255, 0.05)',
+              '--bs-nav-tabs-link-active-border-color': '#00FFFF',
+              '--bs-nav-tabs-link-hover-border-color': '#00FFFF',
+              '--bs-nav-tabs-link-color': '#E0E0E0',
+              padding: '0 2rem',
+              borderBottom: '1px solid rgba(0, 255, 255, 0.1)',
+              marginTop: '1rem'
+            }}
           >
             <Tab eventKey="swap" title="SWAP">
                 <Form style={{ padding: "0.8rem", flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -1407,10 +1626,408 @@ function App() {
                   </div>
               </Form>
             </Tab>
+            <Tab eventKey="history" title="HISTORY">
+              <div style={{ padding: "1rem" }}>
+                <Table striped bordered hover variant="dark" style={{ 
+                  background: 'rgba(18, 18, 18, 0.6)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  overflow: 'hidden'
+                }}>
+                  <thead>
+                    <tr>
+                      <th style={{ color: '#00FFFF' }}>Type</th>
+                      <th style={{ color: '#00FFFF' }}>Amount</th>
+                      <th style={{ color: '#00FFFF' }}>Token</th>
+                      <th style={{ color: '#00FFFF' }}>Info</th>
+                      <th style={{ color: '#00FFFF' }}>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactionHistory.map((transaction) => (
+                      <tr key={transaction.id}>
+                        <td style={{ color: '#E0E0E0' }}>{transaction.type}</td>
+                        <td style={{ color: '#E0E0E0' }}>{transaction.amount}</td>
+                        <td style={{ color: '#E0E0E0' }}>{transaction.token}</td>
+                        <td style={{ color: '#E0E0E0' }}>{transaction.additionalInfo}</td>
+                        <td style={{ color: '#E0E0E0' }}>{transaction.timestamp}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            </Tab>
           </Tabs>
 	    </Card>
         </div>
       </header>
+
+      {/* Add new visualization cards */}
+      {isWalletConnected && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '1200px',
+          marginTop: '1rem',
+          gap: '1rem'
+        }}>
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '30%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Pool Statistics
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Bar
+                  data={poolChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '30%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Reward Rates
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Line
+                  data={rewardChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '30%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Your Position
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Pie
+                  data={userPositionData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
+      {/* Add new analysis cards */}
+      {isWalletConnected && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '1200px',
+          marginTop: '1rem',
+          gap: '1rem'
+        }}>
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '23%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Transaction Volume
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Bar
+                  data={volumeChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '23%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Liquidity Trend
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Line
+                  data={liquidityTrendData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '23%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                Reward Prediction
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Line
+                  data={rewardPredictionData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    },
+                    scales: {
+                      y: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#00FFFF'
+                        },
+                        grid: {
+                          color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+
+          <Card
+            border="primary"
+            bg="dark"
+            text="white"
+            style={{ 
+              background: 'rgba(18, 18, 18, 0.6)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 255, 255, 0.1)',
+              borderRadius: '24px',
+              width: '23%'
+            }}
+          >
+            <Card.Body>
+              <Card.Title style={{ color: '#00FFFF', marginBottom: '1rem' }}>
+                User Behavior
+              </Card.Title>
+              <div style={{ height: '200px' }}>
+                <Doughnut
+                  data={userBehaviorData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: '#00FFFF'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

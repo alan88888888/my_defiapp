@@ -24,6 +24,10 @@ function calculateRewards(address user, uint256 timePeriod) public view returns 
     uint256 userShare = (userBalance * 100) / totalSupply;
     
     // Calculate rewards based on user's share and reward rate
-    uint256 rewards = (userBalance * rewardRate) / 100;
+    // First calculate total rewards for the pool
+    uint256 totalPoolRewards = (totalSupply * rewardRate) / 100;
+    // Then calculate user's share of the rewards
+    uint256 rewards = (totalPoolRewards * userShare) / 100;
+    
     return rewards;
 } 
