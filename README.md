@@ -92,7 +92,7 @@ The frontend configuration in `workspace/frontend/src/utils/contract.js` include
 ### Initial Setup
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/alan88888888/my_defiapp.git
 cd my_defiapp
 ```
 
