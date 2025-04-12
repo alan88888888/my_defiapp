@@ -131,36 +131,6 @@ cd workspace/frontend
 npm start
 ```
 
-### Testnet/Mainnet Setup
-1. Configure MetaMask:
-   - Add the appropriate network (testnet/mainnet)
-   - Import your account
-   - Ensure you have sufficient test/main ETH
-
-2. Deploy contracts:
-```bash
-# For testnet
-npx hardhat run scripts/deploy.js --network <testnet-name>
-
-# For mainnet
-npx hardhat run scripts/deploy.js --network mainnet
-```
-
-3. Update contract addresses:
-   - Update the contract addresses in `.env`
-   - Update the frontend configuration
-
-### Docker Setup
-1. Build the Docker image:
-```bash
-docker build -t defiapp .
-```
-
-2. Run the container:
-```bash
-docker run -p 3000:3000 defiapp
-```
-
 ## Troubleshooting
 
 ### Common Issues
