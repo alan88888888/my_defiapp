@@ -103,7 +103,7 @@ npx hardhat node
 3. Deploy contracts:
 ```bash
 npx hardhat run scripts/deploy.js --network localhost
-npx hardhat run scripts/distributed.js --network localhost
+npx hardhat run scripts/distributed_t.js --network localhost
 ```
 
 4. Start frontend:
