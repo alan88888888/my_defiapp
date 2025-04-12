@@ -71,9 +71,6 @@ ALPHA_TOKEN_ADDRESS=
 BETA_TOKEN_ADDRESS=
 POOL_ADDRESS=
 
-# API Keys (if needed)
-INFURA_API_KEY=
-ETHERSCAN_API_KEY=
 ```
 
 ### Hardhat Configuration
