@@ -131,30 +131,6 @@ cd workspace/frontend
 npm start
 ```
 
-## Troubleshooting
-
-### Common Issues
-1. **Contract Deployment Fails**
-   - Check network connection
-   - Verify account balance
-   - Ensure correct network configuration
-
-2. **Frontend Connection Issues**
-   - Verify MetaMask is connected
-   - Check network configuration
-   - Ensure contract addresses are correct
-
-3. **Transaction Failures**
-   - Check gas settings
-   - Verify token approvals
-   - Ensure sufficient balance
-
-### Support
-For additional support:
-- Check the [documentation](link-to-docs)
-- Open an issue on GitHub
-- Contact the development team
-
 ## Project Structure
 
 ```
@@ -283,40 +259,3 @@ The frontend is built with React and provides a modern, user-friendly interface 
    - Intuitive navigation
    - Clear error messages and notifications
    - Loading states and progress indicators
-
-## Development
-
-### Local Development
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Start local blockchain:
-```bash
-npx hardhat node
-```
-
-3. Deploy contracts:
-```bash
-npx hardhat run scripts/deploy.js --network localhost
-npx hardhat run scripts/distributed_t.js --network localhost
-```
-
-4. Start frontend:
-```bash
-cd workspace/frontend
-npm start
-```
-
-### Testing
-```bash
-npx hardhat test
-```
-
-## Security Considerations
-
-- Smart contracts are audited
-- Use of SafeMath for arithmetic operations
-- Access control for critical functions
-- Time-lock mechanism for reward withdrawal
