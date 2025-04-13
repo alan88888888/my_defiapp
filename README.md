@@ -9,6 +9,7 @@ A decentralized finance (DeFi) application that allows users to provide liquidit
 - **Reward System**: Earn rewards based on your liquidity provision
 - **Time-Locked Staking**: Lock your rewards for different time periods to earn higher rates
 - **Account-Specific States**: Each wallet address maintains its own lock status and time period selection
+- **pool balances and exchange result preview**: Pool balances and exchange result preview are accessible BEFORE connecting to the wallet
 
 ## Prerequisites
 
